@@ -87,7 +87,9 @@ msa_stem=${msa_fn%."$(echo $msa_suffix)"}
 
 # passing a msa filter
 log1=${workdir}/logs/${msa_stem}_seq_len.log
-$GREMLIN_SCRIPT_DIR/seq_len.pl -i ${msa_path} -percent 25 > ${log1}
+cmd="$GREMLIN_SCRIPT_DIR/seq_len.pl -i ${msa_path} -percent 25"
+echo "$cmd"
+eval "$cmd" > ${log1} 2>&1
 
 # read useful number from log1
 seq_len=$(tail -1 ${log1} |awk '{print $NF}')
@@ -95,11 +97,14 @@ seq_len=$(tail -1 ${log1} |awk '{print $NF}')
 # run gremlin
 # takes tooooo loonnnnnnnnng for gremlin in matlab w/ single core, this should be replaced by GREMLIN_TF if possible
 log2=${workdir}/logs/${msa_stem}_gremlin_matlab.log
-$GREMLIN_DIR/run_gremlin.sh $MCR_DIR  ${msa_stem}.cut.msa ${msa_stem}.mtx MaxIter ${GREMLIN_ITER} verbose 1 apc 0 >${log2}
+cmd="$GREMLIN_DIR/run_gremlin.sh $MCR_DIR  ${msa_stem}.cut.msa ${msa_stem}.mtx MaxIter ${GREMLIN_ITER} verbose 1 apc 0"
+echo "$cmd"
+eval "$cmd" >${log2} 2>&1
 
 # generate matrix
 log3=${workdir}/logs/${msa_stem}_mtx2sco.log
-$GREMLIN_SCRIPT_DIR/mtx2sco.pl -mtx ${msa_stem}.mtx -cut ${msa_stem}.cut -div "$(SeqLen ${fasta_1_path})" -seq_len ${seq_len} -apcd ${msa_stem}.apcd > ${log3}
-
+cmd="$GREMLIN_SCRIPT_DIR/mtx2sco.pl -mtx ${msa_stem}.mtx -cut ${msa_stem}.cut -div "$(SeqLen ${fasta_1_path})" -seq_len ${seq_len} -apcd ${msa_stem}.apcd"
+echo "$cmd"
+eval "$cmd" > ${log3} 2>&1
 
 popd
