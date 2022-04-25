@@ -83,11 +83,11 @@ msa_suffix=$(echo "$msa_fn" | awk -F . '{print $NF}')
 msa_stem=${msa_fn%."$(echo $msa_suffix)"}
 
 # test msa data
-# cp $msa_path .
+cp $msa_path .
 
 # passing a msa filter
 log1=${workdir}/logs/${msa_stem}_seq_len.log
-cmd="$GREMLIN_SCRIPT_DIR/seq_len.pl -i ${msa_path} -percent 25"
+cmd="$GREMLIN_SCRIPT_DIR/seq_len.pl -i ${msa_fn} -percent 25"
 echo "$cmd"
 eval "$cmd" 2> ${log1}
 
