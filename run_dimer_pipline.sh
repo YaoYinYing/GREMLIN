@@ -1,0 +1,105 @@
+#!/bin/bash
+# Yinying create this by following the instruction writen by SO
+# http://gremlin.bakerlab.org/cplx_faq.php
+# https://github.com/sokrypton/GREMLIN
+
+# make it stop if error occurs.
+# set -e
+
+usage() {
+      echo ""
+        echo "Usage: $0<OPTIONS>"
+        echo "Required Parameters:"
+        echo "      -i       <input paired msa> "
+        echo "      -f       <fasta for sequence 1> "
+        echo "Optional Parameters:"
+        echo "      -d       <workdir> "
+        echo "      -r       <GREMLIN_ITERATION> "
+        echo "      -m       <MATLAB_Compiler_Runtime> "
+        echo "      -g       <GREMLIN_DIR> "
+        echo "      -s       <GREMLIN_SCRIPT_DIR> "
+        echo ""
+        exit 1
+    }
+while getopts ":i:f:d:r:m:g:s:" opt; do
+    case "${opt}" in
+        # required options
+        i) msa_path=$OPTARG ;;
+        f) fasta_1_path=$OPTARG ;;
+        # updatable options
+        d) workdir=$OPTARG ;;
+        r) GREMLIN_ITER=$OPTARG ;;
+        m) MCR_DIR=$OPTARG ;;
+        g) GREMLIN_DIR=$OPTARG ;;
+        s) GREMLIN_SCRIPT_DIR=$OPTARG ;;
+        *) echo Unknown option!;usage ;;
+    esac
+done
+
+# check required input
+if [[ "$msa_path" == "" || "$fasta_1_path" == "" ]];then
+    usage
+fi
+
+if [[ "$workdir" == "" ]];then
+    workdir=.
+fi
+
+# REPO/SCRIPTS
+if [[ "$GREMLIN_DIR" == "" ]];then
+    GREMLIN_DIR=/repo/GREMLIN/
+fi
+
+if [[ "$GREMLIN_SCRIPT_DIR" == "" ]];then
+    GREMLIN_SCRIPT_DIR=/software/GREMLIN_SCRIPT/
+fi
+
+if [[ "$MCR_DIR" == "" ]];then
+    MCR_DIR=/usr/local/MATLAB/MATLAB_Compiler_Runtime/v717/
+fi
+
+# OTHER PARAMETERS
+if [[ "$GREMLIN_ITER" == "" ]];then
+    GREMLIN_ITER=30
+fi
+
+# Functions Used
+# adapted from FoldDock
+SeqLen(){
+
+	local A=$(grep -v \> $1 | wc -c)
+	local B=$(grep -v \> $1 | wc -l)
+	local C=$(($A-$B))
+	echo Sequence Length: $C
+	return $C
+}
+
+mkdir -p ${workdir} || echo NEVER MIND.
+mkdir logs || echo NEVER MIND.
+pushd ${workdir}
+
+msa_fn=$(basename $msa_path)
+msa_suffix=$(echo "$msa_fn" | awk -F . '{print $NF}')
+msa_stem=${msa_fn%."$(echo $msa_suffix)"}
+
+# test msa data
+# cp $msa_path .
+
+# passing a msa filter
+log1=${workdir}/logs/${msa_stem}_seq_len.log
+$GREMLIN_SCRIPT_DIR/seq_len.pl -i ${msa_path} -percent 25 > ${log1}
+
+# read useful number from log1
+seq_len=$(tail -1 ${log1} |awk '{print $NF}')
+
+# run gremlin
+# takes tooooo loonnnnnnnnng for gremlin in matlab w/ single core, this should be replaced by GREMLIN_TF if possible
+log2=${workdir}/logs/${msa_stem}_gremlin_matlab.log
+$GREMLIN_DIR/run_gremlin.sh $MCR_DIR  ${msa_stem}.cut.msa ${msa_stem}.mtx MaxIter ${GREMLIN_ITER} verbose 1 apc 0 >${log2}
+
+# generate matrix
+log3=${workdir}/logs/${msa_stem}_mtx2sco.log
+$GREMLIN_SCRIPT_DIR/mtx2sco.pl -mtx ${msa_stem}.mtx -cut ${msa_stem}.cut -div "$(SeqLen ${fasta_1_path})" -seq_len ${seq_len} -apcd ${msa_stem}.apcd > ${log3}
+
+
+popd
