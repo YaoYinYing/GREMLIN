@@ -70,8 +70,8 @@ SeqLen(){
 	local A=$(grep -v \> $1 | wc -c)
 	local B=$(grep -v \> $1 | wc -l)
 	local C=$(($A-$B))
-	echo Sequence Length: $C
-	return $C
+	echo $C
+#	return $C
 }
 
 mkdir -p ${workdir} || echo NEVER MIND.
@@ -103,7 +103,7 @@ eval "$cmd" >${log2} 2>&1
 
 # generate matrix
 log3=${workdir}/logs/${msa_stem}_mtx2sco.log
-cmd="$GREMLIN_SCRIPT_DIR/mtx2sco.pl -mtx ${msa_stem}.mtx -cut ${msa_stem}.cut -div "$(SeqLen ${fasta_1_path})" -seq_len ${seq_len} -apcd ${msa_stem}.apcd"
+cmd="$GREMLIN_SCRIPT_DIR/mtx2sco.pl -mtx ${msa_stem}.mtx -cut ${msa_stem}.cut -div $(SeqLen ${fasta_1_path}) -seq_len ${seq_len} -apcd ${msa_stem}.apcd"
 echo "$cmd"
 eval "$cmd" > ${log3} 2>&1
 
