@@ -89,7 +89,7 @@ msa_stem=${msa_fn%."$(echo $msa_suffix)"}
 log1=${workdir}/logs/${msa_stem}_seq_len.log
 cmd="$GREMLIN_SCRIPT_DIR/seq_len.pl -i ${msa_path} -percent 25"
 echo "$cmd"
-eval "$cmd" > ${log1} 2>&1
+eval "$cmd" 2> ${log1}
 
 # read useful number from log1
 seq_len=$(tail -1 ${log1} |awk '{print $NF}')
