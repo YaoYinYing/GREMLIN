@@ -104,13 +104,13 @@ seq_len=$(tail -1 ${log1} |awk '{print $NF}')
 # run gremlin
 # takes tooooo loonnnnnnnnng for gremlin in matlab w/ single core, this should be replaced by GREMLIN_TF if possible
 log2=${workdir}/logs/${jobname}_gremlin_matlab.log
-cmd="$GREMLIN_DIR/run_gremlin.sh $MCR_DIR  ${jobname}.cut.msa ${jobname}.mtx MaxIter ${GREMLIN_ITER} verbose 1 apc 0"
+cmd="$GREMLIN_DIR/run_gremlin.sh $MCR_DIR  ${msa_stem}.cut.msa ${msa_stem}.mtx MaxIter ${GREMLIN_ITER} verbose 1 apc 0"
 echo "$cmd"
 eval "$cmd" >${log2} 2>&1
 
 # generate matrix
 log3=${workdir}/logs/${jobname}_mtx2sco.log
-cmd="$GREMLIN_SCRIPT_DIR/mtx2sco.pl -mtx ${jobname}.mtx -cut ${jobname}.cut -div $(SeqLen ${fasta_1_path}) -seq_len ${seq_len} -apcd ${jobname}.apcd"
+cmd="$GREMLIN_SCRIPT_DIR/mtx2sco.pl -mtx ${msa_stem}.mtx -cut ${msa_stem}.cut -div $(SeqLen ${fasta_1_path}) -seq_len ${seq_len} -apcd ${jobname}.apcd"
 echo "$cmd"
 eval "$cmd" > ${log3} 2>&1
 
